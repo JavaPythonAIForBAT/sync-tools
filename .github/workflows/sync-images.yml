@@ -57,15 +57,21 @@ jobs:
           SWR_EAST3_SECRET: ${{ secrets.SWR_EAST3_SECRET }}
           SWR_HK_USER: ${{ vars.REGISTRY_HK_USER }}
           SWR_HK_SECRET: ${{ secrets.SWR_HK_SECRET }}
+          SWR_NORTH12_USER: ${{ vars.SWR_NORTH12_USER }}
+          SWR_NORTH12_SECRET: ${{ secrets.SWR_NORTH12_SECRET }}
+          QUAY_ATLAS_INFERENCE_USER: ${{ vars.QUAY_ATLAS_INFERENCE_USER }}
+          QUAY_ATLAS_INFERENCE_PWD: ${{ secrets.QUAY_ATLAS_INFERENCE_PWD }}
           CURRENT_SRC: ${{ matrix.src }}
         run: |
           get_creds() {
             case "$1" in
+              quay.io/atlas_inference/*) echo "${QUAY_ATLAS_INFERENCE_USER}:${QUAY_ATLAS_INFERENCE_PWD}" ;;
               quay.io/*)              echo "${QUAY_ASCEND_USER}:${QUAY_ASCEND_PWD}" ;;
               docker.io/*)            echo "${DOCKERHUB_USER}:${DOCKERHUB_PWD}" ;;
               swr.cn-southwest-2.*)   echo "${HWCLOUD_USER}:${HWCLOUD_PWD}" ;;
               swr.cn-east-3.*)        echo "${SWR_EAST3_USER}:${SWR_EAST3_SECRET}" ;;
               swr.ap-southeast-1.*)   echo "${SWR_HK_USER}:${SWR_HK_SECRET}" ;;
+              swr.cn-north-12.*)      echo "${SWR_NORTH12_USER}:${SWR_NORTH12_SECRET}" ;;
               *)                      echo "" ;;
             esac
           }
