@@ -59,10 +59,13 @@ jobs:
           SWR_HK_SECRET: ${{ secrets.SWR_HK_SECRET }}
           SWR_NORTH12_USER: ${{ vars.SWR_NORTH12_USER }}
           SWR_NORTH12_SECRET: ${{ secrets.SWR_NORTH12_SECRET }}
+          QUAY_ATLAS_INFERENCE_USER: ${{ vars.QUAY_ATLAS_INFERENCE_USER }}
+          QUAY_ATLAS_INFERENCE_PWD: ${{ secrets.QUAY_ATLAS_INFERENCE_PWD }}
           CURRENT_SRC: ${{ matrix.src }}
         run: |
           get_creds() {
             case "$1" in
+              quay.io/atlas_inference/*) echo "${QUAY_ATLAS_INFERENCE_USER}:${QUAY_ATLAS_INFERENCE_PWD}" ;;
               quay.io/*)              echo "${QUAY_ASCEND_USER}:${QUAY_ASCEND_PWD}" ;;
               docker.io/*)            echo "${DOCKERHUB_USER}:${DOCKERHUB_PWD}" ;;
               swr.cn-southwest-2.*)   echo "${HWCLOUD_USER}:${HWCLOUD_PWD}" ;;
