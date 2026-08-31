@@ -122,16 +122,23 @@ jobs:
 
           # 获取 tag 列表（只做一次）
           if [ -n "$TAG_FILTER" ]; then
-            repo=$(echo "$SRC" | sed 's|docker\.io/||')
-            TAGS="" next_url="https://hub.docker.com/v2/repositories/${repo}/tags/?page_size=100" page=1
-            while [ "$next_url" != "null" ] && [ "$page" -le 20 ]; do
-              resp=$(curl -s "$next_url")
-              page_tags=$(echo "$resp" | jq -r --arg f "$TAG_FILTER" '.results[] | select(.name | test($f; "i")) | .name' 2>/dev/null || true)
-              [ -n "$page_tags" ] && TAGS="$TAGS"$'\n'"$page_tags"
-              next_url=$(echo "$resp" | jq -r '.next // "null"')
-              page=$((page + 1))
-            done
-            TAGS=$(echo "$TAGS" | sed '/^$/d' | sort -u)
+            if [[ "$SRC" == docker.io/* ]]; then
+              # Docker Hub 源：走分页 API 过滤，避免触发拉取限速
+              repo=$(echo "$SRC" | sed 's|docker\.io/||')
+              TAGS="" next_url="https://hub.docker.com/v2/repositories/${repo}/tags/?page_size=100" page=1
+              while [ "$next_url" != "null" ] && [ "$page" -le 20 ]; do
+                resp=$(curl -s "$next_url")
+                page_tags=$(echo "$resp" | jq -r --arg f "$TAG_FILTER" '.results[] | select(.name | test($f; "i")) | .name' 2>/dev/null || true)
+                [ -n "$page_tags" ] && TAGS="$TAGS"$'\n'"$page_tags"
+                next_url=$(echo "$resp" | jq -r '.next // "null"')
+                page=$((page + 1))
+              done
+              TAGS=$(echo "$TAGS" | sed '/^$/d' | sort -u)
+            else
+              # 非 Docker Hub 源（如 quay.io）：list-tags 后按关键词过滤
+              TAGS=$(skopeo list-tags "${SRC_INSPECT_ARGS[@]}" docker://"$SRC" 2>/dev/null \
+                | jq -r --arg f "$TAG_FILTER" '.Tags[] | select(test($f; "i"))' 2>/dev/null | sort -u)
+            fi
           else
             TAGS=$(skopeo list-tags "${SRC_INSPECT_ARGS[@]}" docker://"$SRC" 2>/dev/null | jq -r '.Tags[]')
           fi
